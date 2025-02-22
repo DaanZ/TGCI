@@ -73,32 +73,35 @@ def display_messages():
             st.markdown(message["content"])
 
 
-def streaming_logo_interface(company_name):
+def streaming_video_interface(company_name):
     st.title(company_name)
     show_background()
+    col1, col2 = st.columns([6, 4])
+    with col1:
+        st.video("https://www.youtube.com/watch?v=xNKEc0Xn5T8")  # Replace with your URL
+        user_prompt = st.chat_input()  # Input box for the user
 
-    display_messages()
+    with col2:
+        with st.container(height=500):
+            display_messages()
+            if user_prompt is not None:
+                st.session_state.history.user(user_prompt)
 
-    user_prompt = st.chat_input()  # Input box for the user
+                with st.chat_message("user", avatar=avatars["user"]):
+                    st.markdown(user_prompt)
 
-    if user_prompt is not None:
-        st.session_state.history.user(user_prompt)
+                with st.spinner("..."):
+                    response_stream = llm_stream(st.session_state.history)
 
-        with st.chat_message("user", avatar=avatars["user"]):
-            st.markdown(user_prompt)
+                answers = process_stream(response_stream)
+                assistant_message_placeholder = st.chat_message("assistant", avatar=avatars["assistant"])
+                assistant_text = assistant_message_placeholder.empty()
 
-        with st.spinner("..."):
-            response_stream = llm_stream(st.session_state.history)
-
-        answers = process_stream(response_stream)
-        assistant_message_placeholder = st.chat_message("assistant", avatar=avatars["assistant"])
-        assistant_text = assistant_message_placeholder.empty()
-
-        chunk = ""
-        for chunk in answers:
-            assistant_text.markdown(chunk)  # Update progressively
-        st.session_state.history.assistant(chunk)  # Save final message in history
-
+                chunk = ""
+                for chunk in answers:
+                    assistant_text.markdown(chunk)  # Update progressively
+                st.session_state.history.assistant(chunk)  # Save final message in history
+                st.markdown('<script>scrollToBottom();</script>', unsafe_allow_html=True)
 
 def read_pages(folder):
     paths = os.path.join(folder, "*.txt")
@@ -110,7 +113,11 @@ def read_pages(folder):
 
 
 if __name__ == "__main__":
-
+    st.set_page_config(
+        page_title=f"The Grantsmanship Center",
+        page_icon="✍️",
+        layout="wide",
+    )
     if "history" not in st.session_state:
         data = json_read_file(os.path.join(rootpath.detect(), "data", "youtube", "lecture.json"))
         st.session_state.history = History()
@@ -118,4 +125,4 @@ if __name__ == "__main__":
         st.session_state.history.system("You are a Lecture helper, you help by answering any and all questions related to Grant writing, and give the user answers relating to the lecture that is part of this conversation:")
         st.session_state.history.system("Please introduce yourself to the user.")
         st.session_state.history.assistant("Hello! I'm here to assist you with any questions or information you might need related to grant writing. Whether you're looking for tips on finding grants, understanding the types of grants available, or need guidance on the application process, feel free to ask!")
-    streaming_logo_interface("The Grantmanship Center")
+    streaming_video_interface("The Grantmanship Center")
