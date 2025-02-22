@@ -1,0 +1,10 @@
+rootpath
+openai
+pandas
+streamlit
+langchain
+langchain-core
+langchain-openai
+langchain-community
+faiss-cpu
+youtube_transcript_api
